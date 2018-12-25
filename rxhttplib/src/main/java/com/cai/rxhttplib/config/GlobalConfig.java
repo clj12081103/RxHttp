@@ -7,6 +7,7 @@ public class GlobalConfig {
     final public static String baseUrl = "http://192.168.31.41:8087/";
 
     public static int TIME_OUT = 20 * 1000;//单位为ms,默认15s
+    public static int RETRY_COUNT = 0;
 
     public static String KEY_TOKEN = "auth_token";
     public static String KEY_DATA = "data";

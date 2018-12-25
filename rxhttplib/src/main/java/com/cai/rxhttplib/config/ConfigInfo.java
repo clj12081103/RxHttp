@@ -1,15 +1,19 @@
 package com.cai.rxhttplib.config;
 
+import com.cai.rxhttplib.Runner;
 import com.cai.rxhttplib.callback.MyCallBack;
+import com.cai.rxhttplib.interfaces.IConfigInfo;
+import io.reactivex.Observable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConfigInfo {
+public class ConfigInfo<T> extends IConfigInfo<T> {
 
     public int method;
     public String url;
     public Map params;
+    public Map<String, String> headerParams = new HashMap<>();
     public int type;
 
     public static final int TYPE_STRING = 1;//純文本,比如html
@@ -37,10 +41,21 @@ public class ConfigInfo {
     //是否拼接token
     public boolean isAppendToken = true;
 
-    public MyCallBack callBack;
+    public boolean isParamsAsJson = false;
 
-    public void callBack() {
+    public boolean download;
+    public boolean uploadMultipart;
+    public boolean uploadBinary;
 
+    public MyCallBack<T> callBack;
+
+    public void callBack(MyCallBack<T> callBack) {
+        this.callBack = callBack;
+        Runner.asCallback(this);
+    }
+
+    public Observable<T> asObservable() {
+        return Runner.asObservable(this);
     }
 
     public ConfigInfo addParams(String key, Object value) {
@@ -103,8 +118,11 @@ public class ConfigInfo {
         return this;
     }
 
+    public boolean isCustomCodeSuccess;
+
     public ConfigInfo setCodeSuccess(int code) {
         codeSuccess = code;
+        isCustomCodeSuccess = true;
         return this;
     }
 }
