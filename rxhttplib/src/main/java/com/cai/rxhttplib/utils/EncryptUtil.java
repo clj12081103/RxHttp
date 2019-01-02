@@ -1,11 +1,13 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by Fernflower decompiler)
-//
-
 package com.cai.rxhttplib.utils;
 
 import android.text.TextUtils;
+import com.blankj.utilcode.util.AppUtils;
+import com.blocain.bihu.apps.sdk.internal.util.Encrypt;
+import com.blocain.bihu.apps.sdk.internal.util.Signature;
+import com.cai.rxhttplib.Constans;
+import com.cai.rxhttplib.config.ConfigInfo;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
@@ -13,6 +15,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class EncryptUtil {
     private static final String AES_ALG = "AES";
@@ -110,5 +114,50 @@ public class EncryptUtil {
 
     private static String byteToHexString(byte b) {
         return HEX_DIGITS[(b & 240) >> 4] + HEX_DIGITS[b & 15];
+    }
+
+    public static void addCommonParamsAndEncrypt(ConfigInfo configInfo) {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+        String content = gson.toJson(configInfo.params);
+        Map<String, String> treeMap = new TreeMap<>();
+        Map<String, String> finalMap = new TreeMap<>();
+
+        if (configInfo.isEncrypt) {
+            configInfo.encryptKey = timestamp;
+            content = Encrypt.encryptContent(content, "AES", configInfo.encryptKey);
+            treeMap.put("encrypt_key", timestamp);
+            finalMap.put("encrypt_key", timestamp);
+        }
+
+        finalMap.put("format", "json");
+        finalMap.put("charset", "UTF-8");
+        finalMap.put("sign_type", "RSA2");
+        finalMap.put("deviceType", "android");
+        finalMap.put("appVersion", AppUtils.getAppVersionName());
+        finalMap.put("version", "1.0");
+        finalMap.put("timestamp", timestamp);
+        finalMap.put("content", content);
+
+
+        treeMap.put("format", "json");
+        treeMap.put("charset", "UTF-8");
+        treeMap.put("sign_type", "RSA2");
+        treeMap.put("deviceType", "android");
+        treeMap.put("appVersion", AppUtils.getAppVersionName());
+        treeMap.put("version", "1.0");
+        treeMap.put("timestamp", timestamp);
+        treeMap.put("content", content);
+
+        String signContent = Signature.getSignContent(treeMap);
+
+        String rsaSign = null;
+        try {
+            rsaSign = RSAUtils.sign(signContent.getBytes(), Constans.rsaPrivateKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finalMap.put("sign", rsaSign);
+        configInfo.params = finalMap;
     }
 }

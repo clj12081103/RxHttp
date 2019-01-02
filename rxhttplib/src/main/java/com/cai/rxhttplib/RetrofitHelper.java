@@ -1,10 +1,12 @@
 package com.cai.rxhttplib;
 
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 import com.cai.rxhttplib.config.ConfigInfo;
 import com.cai.rxhttplib.interfaces.HttpMethod;
 import com.cai.rxhttplib.retrofit.ApiService;
 import com.cai.rxhttplib.retrofit.RetrofitClient;
+import com.cai.rxhttplib.retrofit.UploadFileRequestBody;
 import io.reactivex.Observable;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -42,8 +44,8 @@ public class RetrofitHelper {
 //                    info.headerParams.put(com.cai.rxhttplib.utils.HttpHeaders.HEAD_KEY_CONTENT_TYPE, "application/json");
 //                    observable = service.jsonPost(info.url, body, info.headerParams);
                 } else if (info.uploadBinary) {
-//                    RequestBody body = RetrofitHelper.buildBinaryRequestBody(info);
-//                    observable = service.uploadRawByPost(info.url, body, info.headerParams);
+                    RequestBody body = RetrofitHelper.buildBinaryRequestBody(info);
+                    observable = service.uploadRawByPost(info.url, body, info.headerParams);
                 } else {
                     observable = service.post(info.url, info.params);
                 }
@@ -53,14 +55,14 @@ public class RetrofitHelper {
         return observable;
     }
 
-//    private static <T> RequestBody buildBinaryRequestBody(ConfigInfo<T> info) {
-//        String value = info.getFiles().get(UPLOAD_BINARY_KEY);
-//        File file = new File(value);
-//        String type = getMimeType(value);
-//        Log.d("type", "mimetype:" + type);
-//        UploadFileRequestBody fileRequestBody = new UploadFileRequestBody(file, type, info, 0);
-//        return fileRequestBody;
-//    }
+    private static <T> RequestBody buildBinaryRequestBody(ConfigInfo<T> info) {
+        String value = info.files.get(UPLOAD_BINARY_KEY);
+        File file = new File(value);
+        String type = getMimeType(value);
+        Log.d("type", "mimetype:" + type);
+        UploadFileRequestBody fileRequestBody = new UploadFileRequestBody(file, type, info, 0);
+        return fileRequestBody;
+    }
 
 
     public static <T> Map<String, RequestBody> buildMultipartParams(ConfigInfo<T> info) {

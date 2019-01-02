@@ -2,18 +2,24 @@ package com.cai.rxhttplib.config;
 
 import com.cai.rxhttplib.Runner;
 import com.cai.rxhttplib.callback.MyCallBack;
-import com.cai.rxhttplib.interfaces.IConfigInfo;
+import com.cai.rxhttplib.convert.Converter;
 import io.reactivex.Observable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class ConfigInfo<T> extends IConfigInfo<T> {
+public class ConfigInfo<T> {
 
     public int method;
     public String url;
     public Map params;
     public Map<String, String> headerParams = new HashMap<>();
+
+    //上传的文件路径
+    public Map<String, String> files;
+    public Map<String, List<String>> files2;//一个key接收多个文件
+
     public int type;
 
     public static final int TYPE_STRING = 1;//純文本,比如html
@@ -29,6 +35,8 @@ public class ConfigInfo<T> extends IConfigInfo<T> {
     public String keyMSg = "";
     public int codeSuccess;
     public int codeUnlogin;
+
+    public Converter<T> converter;
 
     //是否加密
     public boolean isEncrypt = true;
@@ -54,6 +62,12 @@ public class ConfigInfo<T> extends IConfigInfo<T> {
         Runner.asCallback(this);
     }
 
+    /**
+     * 使用Observable模式，需要添加一个{@link Converter}用于数据解析
+     * 使用callBack模式不需要
+     *
+     * @return Observable
+     */
     public Observable<T> asObservable() {
         return Runner.asObservable(this);
     }
@@ -67,6 +81,27 @@ public class ConfigInfo<T> extends IConfigInfo<T> {
         } else {
             params.put(key, value.toString());
         }
+        return this;
+    }
+
+    /**
+     * 添加文件
+     * 一般用于上传文件,一个key对应一个文件
+     *
+     * @param key
+     * @param path
+     * @return
+     */
+    public ConfigInfo addFile(String key, String path) {
+        if (files == null) {
+            files = new HashMap<>();
+        }
+        files.put(key, path);
+        return this;
+    }
+
+    public ConfigInfo setConverter(Converter<T> converter) {
+        this.converter = converter;
         return this;
     }
 

@@ -5,7 +5,9 @@ import com.cai.rxhttplib.config.ConfigInfo;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
 
 /**
@@ -18,10 +20,9 @@ public class ResponseTransformer {
         return new ObservableTransformer<ResponseBody, T>() {
             @Override
             public ObservableSource<T> apply(Observable<ResponseBody> upstream) {
-                upstream = upstream.onErrorResumeNext(new ErrorResumeFunction<T>(configInfo, false));
-
-                Observable<T> ob = upstream.flatMap(new ResponseFunction<T>(configInfo, false));
-                return ob;
+                return upstream.subscribeOn(Schedulers.io())
+                        .onErrorResumeNext(new ErrorResumeFunction<T>(configInfo, false))
+                        .flatMap(new ResponseFunction<T>(configInfo, false));
             }
         };
     }
@@ -69,7 +70,8 @@ public class ResponseTransformer {
         @Override
         public ObservableSource<T> apply(ResponseBody responseBody) throws Exception {
             String responseStr = responseBody.string();
-            return Observable.just(ResponseParser.parseResponse(responseStr, info));
+            return Observable.just(ResponseParser.parseResponse(responseStr, info))
+                    .observeOn(AndroidSchedulers.mainThread());
         }
     }
 
